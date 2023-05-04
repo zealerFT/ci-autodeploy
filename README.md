@@ -1,2 +1,5 @@
-# ci_autodeploy
-After the code runs through the test, it triggers image generation, and finally automatically modifies the yaml of k8s to achieve automatic deployment
+## 描述
+gitlab的CI/CD一般是跑完test后触发images的构建，正在的部署会修改存放k8s yaml的项目，大部分都是修改images这一项的tag版本，然后提交代码被类似argocd这类集群管理服务钩子检测项项目修改，自动完成部署。
+
+## 功能
+本服务就上为了完成跑完test并构建完镜像后，到修改yaml之间的步骤，也就上自动修改images的tag，为了完成这一步，需要在自动部署的项目加入一些shell脚本，让完成test和镜像构建的ci继续执行这个shell脚本，来调用服务来完成自动修改yaml的tag后提交代码
