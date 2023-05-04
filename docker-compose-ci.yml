@@ -1,0 +1,40 @@
+version: '3.0'
+
+services:
+  # go test 使用
+  test:
+    image: golang:1.20
+    environment:
+      APP_ENVIRONMENT: "test"
+      GO111MODULE: "on"
+      RSA_PRIVATE_KEY:
+      GOPROXY: "https://goproxy.cn"
+      CMS_DSN:
+      CMS_DSN_RW:
+      CMS_DSN_MIGR:
+      CACHE_REDIS_ADDR:
+      ADDR_REDIS:
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cd src/autodeploy
+        bash /go/src/autodeploy/docker-compose-ci.sh ci-test
+    volumes:
+      - .:/go/src/autodeploy
+
+  # 服务构建使用
+  build:
+    image: golang:1.20
+    environment:
+      GO111MODULE: "on"
+      RSA_PRIVATE_KEY:
+      GOPROXY: "https://goproxy.cn"
+    command:
+      - /bin/bash
+      - -c
+      - |
+        cd src/autodeploy
+        bash /go/src/autodeploy/docker-compose-ci.sh ci-build
+    volumes:
+      - .:/go/src/autodeploy

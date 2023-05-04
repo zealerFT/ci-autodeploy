@@ -1,0 +1,34 @@
+{
+  "refer": "<refer>",
+  "author": "<author>",
+  "message": "<message>",
+  "team": "https://github.com/apps/bot.git",
+  "app": "test",
+  "token": "<token>",
+  "items": [
+    {
+      "name": "test-server",
+      "yaml": "apps-v1.Deployment-bot-test-http.yaml",
+      "env": "<env>",
+      "kind": "deployment",
+      "version": "<version>",
+      "image": "<image>"
+    },
+    {
+      "name": "test-grpc",
+      "yaml": "apps-v1.Deployment-bot-test-grpc.yaml",
+      "env": "<env>",
+      "kind": "deployment",
+      "version": "<version>",
+      "image": "<image>"
+    },
+    {
+      "names": "test-job",
+      "yaml": "apps-v1.Deployment-bot-test-job.yaml",
+      "env": "<env>",
+      "kind": "deployment",
+      "version": "<version>",
+      "image": "<image>"
+    }
+  ]
+}

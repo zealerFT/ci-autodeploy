@@ -1,0 +1,77 @@
+stages:
+  - build
+  - deploy
+  - g-shell-builder
+
+variables:
+  DOCKER_NS: algorithm-rls
+  CGO_ENABLED: 0
+  IMAGE_PREFIX: aliyuncs.com/algorithm-rls/test # 替换成自己的私有仓库
+
+test-all:
+  stage: build
+  variables:
+    CGO_ENABLED: 0
+    APP_ENVIRONMENT: "test"
+    RSA_PRIVATE_KEY: "$RSA_PRIVATE_KEY"
+  script:
+    - docker-compose -p ${CI_PROJECT_ID}_${CI_CONCURRENT_ID} -f docker-compose-ci.yml run test
+  after_script:
+    - docker-compose -p ${CI_PROJECT_ID}_${CI_CONCURRENT_ID} -f docker-compose-ci.yml down --volumes --remove-orphans
+  tags:
+    - docker
+  except:
+    - /^module-*/
+
+build:
+  stage: build
+  script:
+    - docker-compose -p ${CI_PROJECT_ID}_${CI_CONCURRENT_ID} -f docker-compose-ci.yml run build
+  after_script:
+    - docker-compose -p ${CI_PROJECT_ID}_${CI_CONCURRENT_ID} -f docker-compose-ci.yml down --volumes --remove-orphans
+  artifacts:
+    paths:
+      - bin/autodeploy
+  only:
+    - tags
+  tags:
+    - docker
+
+# dev开启自动部署，prod环境只允许手动打tag并修改yaml上线，避免出现意外问题
+.build_script: &build_script
+ - export IMAGE_TAG=${CI_BUILD_TAG:-${CI_BUILD_REF_NAME}-${CI_BUILD_REF:0:8}}
+ - export IMAGE=${IMAGE_PREFIX}:${IMAGE_TAG}
+ - export DEPLOY_IMAGE=${IMAGE_PREFIX}:${IMAGE_TAG}
+ - docker build -t ${IMAGE} .
+ - docker push ${IMAGE}
+ - echo ${DEPLOY_IMAGE}
+ - docker rmi ${IMAGE}
+
+# auto deploy to dev
+deploy_develop_dev:
+  stage: deploy
+  allow_failure: true
+  dependencies:
+    - test
+  variables:
+    DOCKER_NS: algorithm-rls
+    DEPLOY_REGISTRY: aliyuncs.com # 替换成自己的私有仓库
+    ENV: dev
+    CLUSTER_VERSION: default
+    RESOURCES: resource.json
+  script:
+    - go build -o server # 编译
+    - *build_script # 构建镜像
+    - bash deploy/deploy.sh ${RESOURCES} # 触发部署
+  except:
+    - master
+    - /^v.*.*$/
+  only:
+    - ci
+    - /^deploy-dev-v*/
+    - dev
+  tags:
+    - docker
+
+
+

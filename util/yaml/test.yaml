@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        app: test-cms
+        component: fantasy
+        team: test
+        version: default
+    name: test-fantasy
+    namespace: algorithm
+spec:
+    minReadySeconds: 30
+    replicas: 1
+    revisionHistoryLimit: 1
+    selector:
+        matchLabels:
+            app: test-cms
+            component: fantasy
+            version: default
+    strategy:
+        rollingUpdate:
+            maxSurge: 25%
+            maxUnavailable: 0
+        type: RollingUpdate
+    template:
+        metadata:
+            annotations:
+                prometheus.io/path: /metrics
+                prometheus.io/port: "23333"
+                prometheus.io/scrape: "true"
+                sidecar.istio.io/inject: "true"
+                sidecar.istio.io/preStopCommand: while [ $(netstat -plunt | grep tcp | grep -v envoy | grep -v pilot-agent | wc -l | xargs) -ne 0 ]; do sleep 30; done
+            labels:
+                app: test-cms
+                component: fantasy
+                name: test-fantasy
+                team: test
+                version: default
+        spec:
+            containers:
+                - args:
+                    - --migrate_tables=true
+                  command:
+                    - /bin/server
+                  env:
+                    - name: PORT
+                      value: "80"
+                    - name: APP
+                      value: bot
+                    - name: COMPONENT
+                      value: fantasy
+                    - name: VERSION
+                      value: default
+                    - name: HOST_IP
+                      valueFrom:
+                        fieldRef:
+                            apiVersion: v1
+                            fieldPath: status.hostIP
+                    - name: POD_IP
+                      valueFrom:
+                        fieldRef:
+                            apiVersion: v1
+                            fieldPath: status.podIP
+                  envFrom:
+                    - configMapRef:
+                        name: fantasy-config-env
+                  image: test.com/fantasy:v0.0.2
+                  livenessProbe:
+                    failureThreshold: 3
+                    httpGet:
+                        path: /
+                        port: 8080
+                        scheme: HTTP
+                    initialDelaySeconds: 10
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 1
+                  name: test-fantasy
+                  ports:
+                    - containerPort: 8080
+                      protocol: TCP
+                  readinessProbe:
+                    failureThreshold: 3
+                    httpGet:
+                        path: /
+                        port: 8080
+                        scheme: HTTP
+                    initialDelaySeconds: 10
+                    periodSeconds: 10
+                    successThreshold: 1
+                    timeoutSeconds: 1
+                  resources:
+                    limits:
+                        cpu: 2
+                        memory: 5G
+                    requests:
+                        cpu: 200m
+                        memory: 308M
+                  volumeMounts:
+                    - mountPath: /etc/podinfo
+                      name: podinfo
+                      readOnly: true
+            terminationGracePeriodSeconds: 72500
+            volumes:
+                - downwardAPI:
+                    defaultMode: 420
+                    items:
+                        - fieldRef:
+                            apiVersion: v1
+                            fieldPath: metadata.labels
+                          path: labels
+                  name: podinfo
