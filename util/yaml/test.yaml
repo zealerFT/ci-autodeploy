@@ -64,7 +64,7 @@ spec:
                   envFrom:
                     - configMapRef:
                         name: fantasy-config-env
-                  image: test.com/fantasy:v0.0.2
+                  image: test.com/fantasy:v0.0.3
                   livenessProbe:
                     failureThreshold: 3
                     httpGet:
