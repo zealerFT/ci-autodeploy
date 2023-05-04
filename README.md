@@ -31,7 +31,7 @@ http_code=$(curl -X POST -H "Content-Type:application/json " \
             -w '%{http_code}' \
             http://autodeploy:80/api/v1/autodeploy/yaml/image/update) # 这里调用的就是自动部署的服务
 ```
-可以看到最后请求的是http://autodeploy:80域名，这个就是当前服务部署的域名，后面的path可以在项目的route里找到http/route/api.go
+可以看到最后请求的是http://autodeploy:80 域名，这个就是当前服务部署的域名，后面的path可以在项目的route里找到http/route/api.go
  - 3.resource.json是请求参数的组装，我在这里提供了一个范本，参数有gitlab配置的环境变量和gitlab-ci.yml里配置的环境变量
 ```shell
   variables:
