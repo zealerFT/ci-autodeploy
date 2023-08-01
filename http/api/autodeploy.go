@@ -150,13 +150,15 @@ func gitoperate(meta Meta) error {
 		log.Err(err).Msgf("git worktree fail%v", err)
 		return err
 	}
-	fmt.Println("worktree:", worktree)
+	var mu sync.Mutex
 	for index, item := range meta.Items {
 		log.Info().Msgf("item - index: %v - %d", item, index)
 		filename := item.Env + "/" + item.Yaml
 		name := item.Name
 		image := item.Image
 		wg.Go(func() error {
+			mu.Lock()
+			defer mu.Unlock()
 			// Read the deployment.yaml file need 0755 to write
 			file, err := worktree.Filesystem.OpenFile(filename, os.O_RDWR, 0755)
 			if err != nil {
